@@ -7,7 +7,6 @@ import WalletTransactionModel from "../models/walletTransactionModel.js";
 
 const router = express.Router();
 
-//function to add to wallet
 const addWallet = async (userId, amount) => {
   if (!mongoose.Types.ObjectId.isValid(userId)) return false;
   const wallet = await WalletModel.findOne({ userId });
@@ -17,8 +16,6 @@ const addWallet = async (userId, amount) => {
   return true;
 };
 
-
-//function to deduct from balance
 const deductWallet = async (userId, amount) => {
   if (!mongoose.Types.ObjectId.isValid(userId)) return false;
   const wallet = await WalletModel.findOne({ userId });
@@ -28,7 +25,6 @@ const deductWallet = async (userId, amount) => {
   return true;
 };
 
-// function to add transaction record
 const addWalletTransaction = async (senderId, receiverId, amount) => {
   // if (!mongoose.Types.ObjectId.isValid(senderId)) return false;
   if (!mongoose.Types.ObjectId.isValid(receiverId)) return false;
@@ -41,7 +37,6 @@ const addWalletTransaction = async (senderId, receiverId, amount) => {
   return walletTransaction;
 };
 
-// function to calculate and add point
 const addPoint = async (userId, amount) => {
   if (!mongoose.Types.ObjectId.isValid(userId)) return false;
   const point = await PointModel.findOne({ userId });
@@ -77,58 +72,46 @@ const addPoint = async (userId, amount) => {
   } else return false;
 };
 export const fundWallet = async (req, res) => {
-  // user fund wallet
   const { receiverId, amount } = req.body;
 
-  //check receiver wallet
   const receiverWallet = await WalletModel.findOne({ userId: receiverId });
   if (!receiverWallet)
     return res.status(400).json({ message: "Receiver wallet not found" });
 
-  //add receiver wallet balance
   const addWalletBal = await addWallet(receiverId, amount);
 
-  //add wallet transaction
   const addWalletTransactionRecord = await addWalletTransaction(
     "",
     receiverId,
     amount
   ); //senderId = 0 means it is a fund wallet transaction
 
-  //add point
   const addPointBal = await addPoint(receiverId, amount);
 
   return res.status(200).json({ message: "Success" });
 };
 
 export const sendWallet = async (req, res) => {
-  //sending from user to another user
-
   const { senderId, receiverId, amount } = req.body;
 
-  //check sender wallet balance
   const senderWallet = await WalletModel.findOne({ userId: senderId });
   if (!senderWallet)
     return res.status(400).json({ message: "Sender wallet not found" });
   if (senderWallet.balance < amount)
     return res.status(400).json({ message: "Insufficient balance" });
 
-  //check receiver wallet
   const receiverWallet = await WalletModel.findOne({ userId: receiverId });
   if (!receiverWallet)
     return res.status(400).json({ message: "Receiver wallet not found" });
 
-  //deduct sender wallet balance
   const deductWalletResult = await deductWallet(senderId, amount);
   if (!deductWalletResult)
     return res
       .status(400)
       .json({ message: "Failed to deduct sender wallet balance" });
 
-  //add receiver wallet balance
   const addWalletBal = await addWallet(receiverId, amount);
 
-  //add wallet transaction
   const addWalletTransactionRecord = await addWalletTransaction(
     senderId,
     receiverId,
@@ -139,7 +122,6 @@ export const sendWallet = async (req, res) => {
 };
 
 export const getWallet = async (req, res) => {
-  // get wallet balance
   const { id: _id } = req.params;
   const wallet = await WalletModel.findOne({ userId: _id });
   if (!wallet) return res.status(400).json({ message: "Wallet not found" });
@@ -147,7 +129,6 @@ export const getWallet = async (req, res) => {
 };
 
 export const getPoint = async (req, res) => {
-  // get point balance
   const { id: _id } = req.params;
   const point = await PointModel.findOne({ userId: _id });
   if (!point) return res.status(400).json({ message: "Point not found" });
@@ -155,7 +136,6 @@ export const getPoint = async (req, res) => {
 };
 
 export const getTransactions = async (req, res) => {
-  // get all transactions
   const { id: _id } = req.params;
   const transactions = await WalletTransactionModel.find({
     $or: [{ senderId: _id }, { receiverId: _id }],

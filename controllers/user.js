@@ -10,7 +10,7 @@ import Point from "../models/pointModel.js";
 import Wallet from "../models/walletModel.js";
 
 export const signin = async (req, res) => {
-  const { email, password } = req.body; //Coming from formData
+  const { email, password } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
@@ -80,7 +80,9 @@ export const signup = async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.status(200).json({ message: "User successfully created",result, token });
+    res
+      .status(200)
+      .json({ message: "User successfully created", result, token });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
   }
